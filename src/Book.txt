@@ -1,0 +1,17 @@
+621	Rainbow Tales	60	0	C	FC	Children, Fantasy
+622	Animal ABC	50	0	C	NF	Children, Learning
+623	Little Explorer	60	0	C	FC	Adventure, Children
+624	Puzzle Fun	55	0	C	NF	Puzzle, Children
+625	Bedtime Stories	50	0	C	FC	Bedtime, Fantasy
+626	Crime Alley	120	18	D	FC	Crime, Thriller
+627	Corporate Wars	130	18	D	NF	Business, Finance
+628	Dark Romance	110	18	D	FC	Romance, Drama
+629	Investing 101	140	15	D	NF	Finance, Business
+630	War Memoirs	120	15	D	NF	History, War
+631	World Atlas	100	0	A	NF	Geography, Reference
+632	Science Now	100	0	A	NF	Science, Reference
+633	Great Recipes	90	0	A	NF	Cooking, Food
+634	Space Facts	95	0	A	NF	Science, Space
+635	Travel Diaries	100	0	A	FC	Travel, Adventure
+636	Poetry Garden	85	0	A	FC	Poetry, Literature
+637	Myth and Legend	95	0	A	FC	Fantasy, History
