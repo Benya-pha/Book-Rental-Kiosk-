@@ -26,7 +26,7 @@ public class Main {
             //Book Rental Kiosk
 
             if (func == 1) {//Borrow a book
-                File book = new File("src\\Store.txt");
+                File book = new File("src/Store.txt");
                 Scanner bookScanner = new Scanner(book);
 
                 System.out.println("-------------------");
@@ -50,7 +50,7 @@ public class Main {
                 int storeID = sc.nextInt();
                 System.out.println("-------------------");
 
-                File store = new File("src\\Store.txt");
+                File store = new File("src/Store.txt");
                 Scanner storeScanner = new Scanner(store);
 
                 String storeCode = "";
@@ -69,7 +69,7 @@ public class Main {
                 }
 
                 System.out.println("--------------------------------------");
-                File bookname = new File("src\\Book.txt");
+                File bookname = new File("src/Book.txt");
                 Scanner booknameScanner = new Scanner(bookname);
 
                 System.out.printf("%-8s%-18s%-20s", "ID", "Book", "Price");
@@ -103,7 +103,7 @@ public class Main {
                 System.out.println(pin);
 
 
-                File loan = new File("src\\Loan.txt");
+                File loan = new File("src/Loan.txt");
                 Scanner loanScanner = new Scanner(loan);
 
                 int maxID = 0;
@@ -125,7 +125,7 @@ public class Main {
 
                 int newLoanID = maxID + 1;
                 String newLoan = "\n" + newLoanID + "\t" + bookID + "\t" + storeCode + "\t" + tel.substring(0,3) + "-" + tel.substring(3,6) + "-" + tel.substring(6,10) + "\t" + pin + "\t0\t-\n";                Files.write(
-                        Paths.get("src\\Loan.txt"),
+                        Paths.get("src/Loan.txt"),
                         newLoan.getBytes(StandardCharsets.UTF_8),
                         StandardOpenOption.APPEND
                 );
@@ -133,7 +133,7 @@ public class Main {
                 System.out.println("--------------------------------------");
                 System.out.println("Your loan has been successfully booked.");
             } else if (func == 2) {//Self-service panel
-                File book = new File("src\\Store.txt");
+                File book = new File("src/Store.txt");
                 Scanner bookScanner = new Scanner(book);
 
                 System.out.println("-------------------");
@@ -156,7 +156,7 @@ public class Main {
                 int storeID = sc.nextInt();
                 System.out.println("-------------------");
 
-                File store = new File("src\\Store.txt");
+                File store = new File("src/Store.txt");
                 Scanner storeScanner = new Scanner(store);
 
                 String storeCode = "";
@@ -193,10 +193,10 @@ public class Main {
                         String pin = sc.next();
                         System.out.println("-------------------");
 
-                        File loan = new File("src\\Loan.txt");
+                        File loan = new File("src/Loan.txt");
                         File tempFile = new File("Temp.txt");
-                        File bookname = new File("src\\Book.txt");
-                        File storeUpdate = new File("src\\Store.txt");
+                        File bookname = new File("src/Book.txt");
+                        File storeUpdate = new File("src/Store.txt");
 
                         boolean pinFound = false;
                         String bookTitle = "";
@@ -312,7 +312,7 @@ public class Main {
                     String mail = sc.next();
                     String pass = sc.next();
 
-                    File login = new File("src\\Login.txt");
+                    File login = new File("src/Login.txt");
                     Scanner loginScanner = new Scanner(login);
 
                     while (loginScanner.hasNextLine()) {
@@ -376,7 +376,7 @@ public class Main {
 
                             try {
 
-                                File file = new File("src\\Store.txt");
+                                File file = new File("src/Store.txt");
                                 Scanner fileScanner = new Scanner(file);
 
                                 System.out.println(
