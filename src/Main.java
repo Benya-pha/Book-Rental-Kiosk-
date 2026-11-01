@@ -160,6 +160,7 @@ public class Main {
                 Scanner storeScanner = new Scanner(store);
 
                 String storeCode = "";
+                String storeCity = "";
                 while (storeScanner.hasNextLine()) {
                     String line2 = storeScanner.nextLine();
                     String[] data2 = line2.split("\t");
@@ -168,9 +169,9 @@ public class Main {
                         int id = Integer.parseInt(data2[0].substring(3, 6));
 
                         if (id == storeID) {
-                            System.out.println("Station ID : " + storeID
-                                    + " (" + data2[1] + ")");
+                            System.out.println("Station ID : " + storeID + " (" + data2[1] + ")");
                             storeCode = data2[0];
+                            storeCity = data2[1];
                             break;
                         }
                     }
@@ -180,14 +181,18 @@ public class Main {
                 if (storeCode.isEmpty()) {
                     System.out.println("Invalid Store ID.");
                 } else {
-                    System.out.println("-------------------");
-                    System.out.println("1. Use your PIN to pick up.");
-                    System.out.println("2. Exit");
-                    System.out.println("-------------------");
-                    System.out.print("Enter Number : ");
-                    int checkChoice = sc.nextInt();
+                    int checkChoice;
+                    do {
+                        System.out.println("-------------------------");
+                        System.out.println("Store ID : " + storeID + " (" + storeCity + ")");
+                        System.out.println("1. Use your PIN to pick up.");
+                        System.out.println("2. Most popular book");
+                        System.out.println("3. Exit");
+                        System.out.println("-------------------------");
+                        System.out.print("Enter Number : ");
+                        checkChoice = sc.nextInt();
 
-                    if (checkChoice == 1) {
+                        if (checkChoice == 1) {
                         System.out.println("-------------------");
                         System.out.print("Enter your PIN : ");
                         String pin = sc.next();
@@ -243,11 +248,7 @@ public class Main {
                         writer.close();
 
                         if (pinFound) {
-                            Files.move(
-                                    tempFile.toPath(),
-                                    loan.toPath(),
-                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
-                            );
+                            Files.move( tempFile.toPath(), loan.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING );
 
                             Scanner storeUpdateScanner = new Scanner(storeUpdate);
                             File tempStore = new File("TempStore.txt");
@@ -257,44 +258,49 @@ public class Main {
                                 String storeLine = storeUpdateScanner.nextLine();
                                 String[] storeData = storeLine.split("\t");
 
-                                if (storeData.length >= 6
-                                        && storeData[0].equals(storeCode)) {
-
-                                    double balance = Double.parseDouble(
-                                            storeData[4].replace("$", "").replace(",", "")
-                                    );
-
+                                if (storeData.length >= 6 && storeData[0].equals(storeCode)) {
+                                    double balance = Double.parseDouble( storeData[4].replace("$", "").replace(",", ""));
                                     double dollar = price / 36.96;
                                     balance = balance + dollar;
-
                                     storeData[4] = "$" + String.format(Locale.US, "%,.2f", balance);
                                 }
-
                                 storeWriter.println(String.join("\t", storeData));
                             }
-
                             storeUpdateScanner.close();
                             storeWriter.close();
+                            Files.move(tempStore.toPath(), storeUpdate.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-                            Files.move(
-                                    tempStore.toPath(),
-                                    storeUpdate.toPath(),
-                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
-                            );
-
-                            System.out.println("Your \"" + bookTitle
-                                    + "\" is ready for pickup.");
+                            System.out.println("Your \"" + bookTitle + "\" is ready for pickup.");
 
                         } else {
                             tempFile.delete();
                             System.out.println("Invalid PIN.");
                         }
 
-                    } else if (checkChoice == 2) {
-                        System.out.println("Thank you for using the service.");
-                    } else {
-                        System.out.println("Invalid choice.");
-                    }
+                        } else if (checkChoice == 2) {
+                            int categoryChoice;
+                            do {
+                                System.out.println("-------------------------");
+                                System.out.println("Store ID : " + storeID + " (" + storeCity + ")");
+                                System.out.println("1. For-Children");
+                                System.out.println("2. For-Adult");
+                                System.out.println("3. For-All");
+                                System.out.println("4. Exit");
+                                System.out.println("--------------------");
+                                System.out.print("Enter Number : ");
+                                categoryChoice = sc.nextInt();
+                                System.out.println("--------------------");
+
+                                if (categoryChoice >= 1 && categoryChoice <= 3) {
+                                    showMostPopularBooks(storeCode, categoryChoice);
+                                } else if (categoryChoice != 4) {
+                                    System.out.println("Invalid choice.");
+                                }
+                            } while (categoryChoice != 4);
+                        } else if (checkChoice != 3) {
+                            System.out.println("Invalid choice.");
+                        }
+                    } while (checkChoice != 3);
                 }
             }else if (func == 3) {//Login
                 int incorrect = 0;
@@ -752,5 +758,61 @@ public class Main {
                 System.out.println("Invalid choice.");
             }
         }
+    }
+
+    private static void showMostPopularBooks(String storeCode, int categoryChoice) throws IOException {
+        Map<String, Integer> usageByBook = new HashMap<>();
+        File loanFile = new File("src/Loan.txt");
+
+        try (Scanner loanScanner = new Scanner(loanFile)) {
+            while (loanScanner.hasNextLine()) {
+                String[] loanData = loanScanner.nextLine().split("\\t");
+                // Count completed pickups at the selected store.
+                if (loanData.length >= 7 && storeCode.equals(loanData[2]) && "1".equals(loanData[5])) {
+                    usageByBook.merge(loanData[1], 1, Integer::sum);
+                }
+            }
+        }
+
+        String categoryCode;
+        String categoryName;
+        if (categoryChoice == 1) {
+            categoryCode = "C";
+            categoryName = "For-Children";
+        } else if (categoryChoice == 2) {
+            categoryCode = "D";
+            categoryName = "For-Adult";
+        } else {
+            categoryCode = "A";
+            categoryName = "For-All";
+        }
+
+        List<String[]> books = new ArrayList<>();
+
+        File bookFile = new File("src/Book.txt");
+        try (Scanner bookScanner = new Scanner(bookFile)) {
+            while (bookScanner.hasNextLine()) {
+                String[] bookData = bookScanner.nextLine().split("\\t");
+                if (bookData.length >= 5 && categoryCode.equals(bookData[4])) {
+                    books.add(bookData);
+                }
+            }
+        }
+
+        books.sort((left, right) -> {
+            int countOrder = Integer.compare(
+                    usageByBook.getOrDefault(right[0], 0),
+                    usageByBook.getOrDefault(left[0], 0));
+            return countOrder != 0 ? countOrder : left[0].compareTo(right[0]);
+        });
+
+        System.out.println("--------------------");
+        System.out.println("Top 3 " + categoryName);
+        System.out.println("--------------------");
+        for (int i = 0; i < Math.min(3, books.size()); i++) {
+            String[] book = books.get(i);
+            System.out.println("# " + (i + 1) + " : " + book[0] + " " + book[1]);
+        }
+        System.out.println("--------------------");
     }
 }
