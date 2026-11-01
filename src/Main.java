@@ -6,8 +6,10 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.*;
 
+// โปรแกรมรวมการยืมหนังสือ รับหนังสือ ดูข้อมูล และจัดการสมาชิกไว้ในเมนูเดียว
 public class Main {
 
+// ควบคุมเมนูหลักและเรียกขั้นตอนตามฟังก์ชันที่ผู้ใช้เลือก
     public static void main(String[] args) throws IOException {
         Scanner sc = new Scanner(System.in);
         while (true) {//Start
@@ -25,6 +27,7 @@ public class Main {
 
             //Book Rental Kiosk
 
+            // Borrow a book: เลือกสาขาและหนังสือ สร้าง PIN แล้วบันทึกรายการยืมที่ยังรอรับ
             if (func == 1) {//Borrow a book
                 File book = new File("src/Store.txt");
                 Scanner bookScanner = new Scanner(book);
@@ -132,6 +135,7 @@ public class Main {
 
                 System.out.println("--------------------------------------");
                 System.out.println("Your loan has been successfully booked.");
+            // Self-service: เลือกสาขาเพื่อรับหนังสือด้วย PIN หรือดูหนังสือยอดนิยม
             } else if (func == 2) {//Self-service panel
                 File book = new File("src/Store.txt");
                 Scanner bookScanner = new Scanner(book);
@@ -178,9 +182,11 @@ public class Main {
                 }
                 storeScanner.close();
 
+                // หยุดขั้นตอนของสาขานี้เมื่อไม่พบ Store ID ที่ผู้ใช้กรอก
                 if (storeCode.isEmpty()) {
                     System.out.println("Invalid Store ID.");
                 } else {
+                    // วนกลับมาแสดงเมนูสาขาจนกว่าผู้ใช้จะเลือกออก
                     int checkChoice;
                     do {
                         System.out.println("-------------------------");
@@ -192,6 +198,7 @@ public class Main {
                         System.out.print("Enter Number : ");
                         checkChoice = sc.nextInt();
 
+                        // รับหนังสือ: ตรวจสอบ PIN แล้วอัปเดต Loan และยอดเงินของสาขา
                         if (checkChoice == 1) {
                         System.out.println("-------------------");
                         System.out.print("Enter your PIN : ");
@@ -203,10 +210,12 @@ public class Main {
                         File bookname = new File("src/Book.txt");
                         File storeUpdate = new File("src/Store.txt");
 
+                        // เก็บผลการค้นหาและข้อมูลหนังสือที่จะใช้แสดงผล/คำนวณยอดเงิน
                         boolean pinFound = false;
                         String bookTitle = "";
                         double price = 0;
 
+                        // เขียนข้อมูลทุกแถวลงไฟล์ชั่วคราว เพื่อแทนที่ Loan.txt หลังอัปเดตสำเร็จ
                         Scanner loanScanner = new Scanner(loan);
                         PrintWriter writer = new PrintWriter(tempFile);
 
@@ -214,11 +223,13 @@ public class Main {
                             String line = loanScanner.nextLine();
                             String[] data = line.split("\t");
 
+                            // PIN ต้องตรงกับสาขาที่เลือก และรายการต้องยังมีสถานะรอรับ (0)
                             if (data.length >= 7 && pin.equals(data[4])
                                     && storeCode.equals(data[2]) && data[5].equals("0")) {
 
                                 String bookID = data[1];
 
+                                // ใช้ Book ID ใน Loan ค้นชื่อและราคาจาก Book.txt
                                 Scanner bookScanner2 = new Scanner(bookname);
 
                                 while (bookScanner2.hasNextLine()) {
@@ -234,6 +245,7 @@ public class Main {
                                 }
                                 bookScanner2.close();
 
+                                // เมื่อพบหนังสือแล้ว ให้เปลี่ยนสถานะเป็นรับแล้วและบันทึกวันที่
                                 if (!bookTitle.isEmpty()) {
                                     data[5] = "1";
                                     data[6] = LocalDate.now().toString().replace("-", ".");
@@ -241,15 +253,18 @@ public class Main {
                                 }
                             }
 
+                            // คงแถวเดิมไว้ทั้งหมด และเขียนแถวที่แก้สถานะแล้วลงไฟล์ชั่วคราว
                             writer.println(String.join("\t", data));
                         }
 
                         loanScanner.close();
                         writer.close();
 
+                        // หากพบ PIN ที่ถูกต้อง ให้แทนที่ Loan.txt แล้วจึงอัปเดตยอดสาขา
                         if (pinFound) {
                             Files.move( tempFile.toPath(), loan.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING );
 
+                            // ปรับยอดเฉพาะสาขาที่ตรงกับรายการรับหนังสือ โดยเขียนผ่านไฟล์ชั่วคราว
                             Scanner storeUpdateScanner = new Scanner(storeUpdate);
                             File tempStore = new File("TempStore.txt");
                             PrintWriter storeWriter = new PrintWriter(tempStore);
@@ -272,11 +287,13 @@ public class Main {
 
                             System.out.println("Your \"" + bookTitle + "\" is ready for pickup.");
 
+                        // ลบไฟล์ชั่วคราวเมื่อไม่พบ PIN ที่ใช้ได้
                         } else {
                             tempFile.delete();
                             System.out.println("Invalid PIN.");
                         }
 
+                        // เมนูหนังสือยอดนิยมให้เลือกหมวด และกลับมาที่เมนูสาขาเมื่อเลือกออก
                         } else if (checkChoice == 2) {
                             int categoryChoice;
                             do {
@@ -291,6 +308,7 @@ public class Main {
                                 categoryChoice = sc.nextInt();
                                 System.out.println("--------------------");
 
+                                // ส่งรหัสสาขาและหมวดที่เลือกไปคำนวณ Top 3
                                 if (categoryChoice >= 1 && categoryChoice <= 3) {
                                     showMostPopularBooks(storeCode, categoryChoice);
                                 } else if (categoryChoice != 4) {
@@ -302,6 +320,7 @@ public class Main {
                         }
                     } while (checkChoice != 3);
                 }
+            // Login: อนุญาตให้ลองข้อมูลเข้าสู่ระบบได้ไม่เกิน 3 ครั้ง
             }else if (func == 3) {//Login
                 int incorrect = 0;
                 boolean loginSuccess = false;
@@ -359,6 +378,7 @@ public class Main {
                     }
                 }
 
+                // เมื่อเข้าสู่ระบบสำเร็จ จึงเปิดเมนูจัดการ Store และสมาชิก
                 if (loginSuccess) {
                     int choice;
                     do {
@@ -378,6 +398,7 @@ public class Main {
 
                         //System.out.println("-------------------");
 
+                        // Store details: อ่านและแสดงข้อมูลสาขาทุกแถวในไฟล์
                         if (choice == 1) {//Store details
 
                             try {
@@ -412,6 +433,7 @@ public class Main {
                                 System.out.println("Cannot read Store.txt");
                             }
 
+                        // Member details: อ่านรายชื่อทั้งหมดแล้วเรียงตามตัวเลือกของผู้ใช้
                         } else if (choice == 2) {//Member details
 
                             int choice2;
@@ -428,6 +450,7 @@ public class Main {
 
                                 choice2 = sc.nextInt();
 
+                                // เรียง ID จากมากไปน้อย แล้วแสดงข้อมูลสมาชิก
                                 if (choice2 == 1) {//Sorting by ID (DESC)
                                     try {
                                         File file = new File("src/Member.txt");
@@ -479,6 +502,7 @@ public class Main {
                                         System.out.println("Cannot read Member.txt");
                                     }
 
+                                // เรียงชื่อจาก A ถึง Z แล้วแสดงข้อมูลสมาชิก
                                 } else if (choice2 == 2) {//Sorting by name (ASC)
                                     try {
                                         File file = new File("src/Member.txt");
@@ -530,6 +554,7 @@ public class Main {
 
                             } while (choice2 != 3);//Return to main menu
 
+                        // Add member: ตรวจข้อมูล สร้าง ID ถัดจากค่าสูงสุด แล้วเพิ่มแถวใหม่
                         } else if (choice == 3) {//Add member
 
                             String firstName;
@@ -592,6 +617,7 @@ public class Main {
                                 String formatTel = tel.substring(0, 3) + "-" + tel.substring(3, 6) + "-" + tel.substring(6, 10);
                                 String formatDate = today.toString().replace("-", ".");
 
+                                // ประกอบข้อมูลสมาชิกเป็นแถวแบบคั่นด้วยแท็บก่อนเพิ่มท้ายไฟล์
                                 String newMem = newIDMem + "\t" + memberName + "\t" + formatTel + "\t" + formatDate + "\n";
                                 Files.write(Paths.get("src/Member.txt"), newMem.getBytes(), StandardOpenOption.APPEND);
 
@@ -601,6 +627,7 @@ public class Main {
                                 System.out.println("Cannot read Member.txt");
                             }
 
+                        // Edit member: เก็บแถวเดิมไว้ แทนเฉพาะสมาชิกตาม ID แล้วเขียนไฟล์ใหม่
                         } else if (choice == 4) {//Edit member
 
                             String memberID;
@@ -656,6 +683,7 @@ public class Main {
                                 File file = new File(filePath);
                                 Scanner fileScanner = new Scanner(file);
 
+                                // เก็บทุกแถวไว้ก่อน เพื่อรักษาข้อมูลสมาชิกคนอื่นระหว่างแก้ไข
                                 ArrayList<String> members = new ArrayList<>();
                                 boolean found = false;
                                 boolean validEdit = true;
@@ -719,12 +747,14 @@ public class Main {
 
                                 fileScanner.close();
 
+                                // ถ้าไม่พบ ID จะไม่เขียนทับไฟล์สมาชิก
                                 if (!found) {
 
                                     System.out.println("Invalid Member ID.!!!!");
 
                                 } else if (validEdit) {
 
+                                    // รวมแถวที่เก็บไว้เป็นเนื้อหาไฟล์ฉบับใหม่
                                     String allMembers = String.join("\n", members) + "\n";
 
                                     Files.write(
@@ -740,6 +770,7 @@ public class Main {
                                 System.out.println("Invalid Member ID.!!!!");
                             }
 
+                        // Logout: ออกจากเมนูจัดการและกลับไปเมนูหลัก
                         } else if (choice == 5) {//Logout
                             System.out.println("Logout successfully.");
                             System.out.println("Thank you for using the service.");
@@ -760,10 +791,12 @@ public class Main {
         }
     }
 
+    // คำนวณและแสดง Top 3 ของหมวดที่เลือก เฉพาะรายการรับหนังสือที่สาขานี้
     private static void showMostPopularBooks(String storeCode, int categoryChoice) throws IOException {
         Map<String, Integer> usageByBook = new HashMap<>();
         File loanFile = new File("src/Loan.txt");
 
+        // นับการใช้งานจาก Loan เฉพาะรายการสถานะรับแล้ว (1) และ Store ที่เลือก
         try (Scanner loanScanner = new Scanner(loanFile)) {
             while (loanScanner.hasNextLine()) {
                 String[] loanData = loanScanner.nextLine().split("\\t");
@@ -774,6 +807,7 @@ public class Main {
             }
         }
 
+        // แปลงตัวเลือกหมวดในเมนูเป็นรหัสหมวดที่เก็บใน Book.txt
         String categoryCode;
         String categoryName;
         if (categoryChoice == 1) {
@@ -790,6 +824,7 @@ public class Main {
         List<String[]> books = new ArrayList<>();
 
         File bookFile = new File("src/Book.txt");
+        // เลือกหนังสือเฉพาะหมวดที่ร้องขอ
         try (Scanner bookScanner = new Scanner(bookFile)) {
             while (bookScanner.hasNextLine()) {
                 String[] bookData = bookScanner.nextLine().split("\\t");
@@ -799,6 +834,7 @@ public class Main {
             }
         }
 
+        // เรียงตามจำนวนครั้งที่รับจากมากไปน้อย; ถ้าเท่ากันใช้ Book ID เรียงลำดับ
         books.sort((left, right) -> {
             int countOrder = Integer.compare(
                     usageByBook.getOrDefault(right[0], 0),
@@ -809,6 +845,7 @@ public class Main {
         System.out.println("--------------------");
         System.out.println("Top 3 " + categoryName);
         System.out.println("--------------------");
+        // แสดงไม่เกิน 3 รายการ เผื่อหมวดนั้นมีหนังสือน้อยกว่า 3 เล่ม
         for (int i = 0; i < Math.min(3, books.size()); i++) {
             String[] book = books.get(i);
             System.out.println("# " + (i + 1) + " : " + book[0] + " " + book[1]);
